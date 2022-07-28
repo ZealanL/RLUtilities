@@ -104,52 +104,58 @@ float scale(float dv) {
 
 void Ball::step(float dt, const Car& c) {
 
-  vec3 p = closest_point_on_obb(position, c.hitbox());
+  // must be within this distance to be able to touch the ball
+  static float min_touch_dist = 200 + Ball::collision_radius;
 
-  if (norm(p - position) < collision_radius) {
+  vec3 delta_pos = position - c.position;
+  if (dot(delta_pos, delta_pos) < min_touch_dist * min_touch_dist) {
 
-    vec3 cx = c.position;
-    vec3 cv = c.velocity;
-    vec3 cw = c.angular_velocity;
-    mat3 co = c.orientation;
+    vec3 p = closest_point_on_obb(position, c.hitbox());
+    vec3 p_ball_delta = p - position;
+    if (dot(p_ball_delta, p_ball_delta) < collision_radius * collision_radius) {
 
-    vec3 n1 = normalize(p - position);
+      vec3 cx = c.position;
+      vec3 cv = c.velocity;
+      vec3 cw = c.angular_velocity;
+      mat3 co = c.orientation;
 
-    mat3 L_b = antisym(p - position);
-    mat3 L_c = antisym(p - c.position);
+      vec3 n1 = normalize(p_ball_delta);
 
-    mat3 invI_c = dot(co, dot(c.invI, transpose(co)));
+      mat3 L_b = antisym(p_ball_delta);
+      mat3 L_c = antisym(p - c.position);
 
-    mat3 M = inv(((1.0f / m) + (1.0f / c.m)) * eye<3>() - (dot(L_b, L_b) / I) - dot(L_c, dot(invI_c, L_c)));
+      mat3 invI_c = dot(co, dot(c.invI, transpose(co)));
 
-    vec3 Delta_V = (cv - dot(L_c, cw)) - (velocity - dot(L_b, angular_velocity));
+      mat3 M = inv(((1.0f / m) + (1.0f / c.m)) * eye<3>() - (dot(L_b, L_b) / I) - dot(L_c, dot(invI_c, L_c)));
 
-    // compute the impulse that is consistent with an inelastic collision 
-    vec3 J1 = dot(M, Delta_V);
+      vec3 Delta_V = (cv - dot(L_c, cw)) - (velocity - dot(L_b, angular_velocity));
 
-    vec3 J1_perp = fminf(dot(J1, n1), -1.0) * n1;
-    vec3 J1_para = J1 - J1_perp;
+      // compute the impulse that is consistent with an inelastic collision 
+      vec3 J1 = dot(M, Delta_V);
 
-    float ratio = norm(J1_perp) / fmaxf(norm(J1_para), 0.001f);
+      vec3 J1_perp = fminf(dot(J1, n1), -1.0) * n1;
+      vec3 J1_para = J1 - J1_perp;
 
-    // scale the parallel component of J1 such that the
-    // Coulomb friction model is satisfied
-    J1 = J1_perp + fminf(1.0f, mu * ratio) * J1_para;
+      float ratio = norm(J1_perp) / fmaxf(norm(J1_para), 0.001f);
+
+      // scale the parallel component of J1 such that the
+      // Coulomb friction model is satisfied
+      J1 = J1_perp + fminf(1.0f, mu * ratio) * J1_para;
 
 
-    vec3 f = c.forward();
-    vec3 n2 = position - cx;
-    n2[2] *= 0.35f;
-    n2 = normalize(n2 - 0.35f * dot(n2, f) * f);
+      vec3 f = c.forward();
+      vec3 n2 = position - cx;
+      n2[2] *= 0.35f;
+      n2 = normalize(n2 - 0.35f * dot(n2, f) * f);
 
-    float dv = fminf(norm(velocity - cv), 4600.0f);
-    vec3 J2 = m * dv * scale(dv) * n2;
+      float dv = fminf(norm(velocity - cv), 4600.0f);
+      vec3 J2 = m * dv * scale(dv) * n2;
 
-    angular_velocity += dot(L_b, J1) / I;
-    velocity += (J1 + J2) / m;
+      angular_velocity += dot(L_b, J1) / I;
+      velocity += (J1 + J2) / m;
 
+    }
   }
 
   step(dt);
-
 }
