@@ -133,11 +133,8 @@ void Car::aerial_control(const Input& in, float dt) {
   if (0.0f <= dodge_timer && dodge_timer <= Dodge::torque_time) {
     angular_velocity += dodge_torque * dt;
   } else {
-    // make sure we have some angular input
-    if (in.roll != 0 || in.pitch || in.yaw != 0) {
-      vec3 omega_local = dot(angular_velocity, orientation);
-      angular_velocity += dot(orientation, T * rpy + H * omega_local) * (dt / J);
-    }
+    vec3 omega_local = dot(angular_velocity, orientation);
+    angular_velocity += dot(orientation, T * rpy + H * omega_local) * (dt / J);
   }
 
   velocity += Game::gravity * dt;
