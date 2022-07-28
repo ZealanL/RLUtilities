@@ -101,10 +101,7 @@ inline mat < 2, 2 > rotation(const float theta) {
 }
 
 inline mat < 3, 3 > axis_to_rotation(const vec < 3 > & omega) {
-
-  float norm_omega = norm(omega);
-
-  if (fabs(norm_omega) < 0.000001f) {
+  if (dot(omega, omega) <= FLT_MIN) {
 
     return eye< 3 >();
 
@@ -121,31 +118,31 @@ inline mat < 3, 3 > axis_to_rotation(const vec < 3 > & omega) {
 
     return eye< 3 >() + sin(norm_omega) * K + (1.0f - cos(norm_omega)) * dot(K, K);
 #else
+	float norm_omega = norm(omega);
     vec3 u = omega / norm_omega;
 
     float c = cos(norm_omega);
     float s = sin(norm_omega);
 
-    return mat < 3, 3 >{
-      {
-        u[0]*u[0]*(1.0f - c) + c,
-        u[0]*u[1]*(1.0f - c) - u[2]*s,
-        u[0]*u[2]*(1.0f - c) + u[1]*s
-      },{
-        u[1]*u[0]*(1.0f - c) + u[2]*s,
-        u[1]*u[1]*(1.0f - c) + c,
-        u[1]*u[2]*(1.0f - c) - u[0]*s
-      },{
-        u[2]*u[0]*(1.0f - c) - u[1]*s,
-        u[2]*u[1]*(1.0f - c) + u[0]*s,
-        u[2]*u[2]*(1.0f - c) + c
-      }
-    };
+	float inv_c = 1 - c;
 
+	mat < 3, 3 > result;
+
+	result[0] = u[0] * u[0] * inv_c+c;
+	result[1] = u[1] * u[0] * inv_c+u[2] * s;
+	result[2] = u[2] * u[0] * inv_c-u[1] * s;
+
+	result[3] = u[0] * u[1] * inv_c-u[2] * s;
+	result[4] = u[1] * u[1] * inv_c+c;
+	result[5] = u[2] * u[1] * inv_c+u[0] * s;
+
+	result[6] = u[0] * u[2] * inv_c+u[1] * s;
+	result[7] = u[1] * u[2] * inv_c-u[0] * s;
+	result[8] = u[2] * u[2] * inv_c+c;
+
+	return result;
 #endif
-
   }
-
 }
 
 inline vec < 3 > rotation_to_axis(const mat < 3, 3 > & R) {
