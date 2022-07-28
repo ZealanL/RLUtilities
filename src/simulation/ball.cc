@@ -35,7 +35,7 @@ sphere Ball::hitbox() {
 void Ball::step(float dt) {
   ray contact = Field::collide(hitbox());
 
-  if (norm(contact.direction) > 0.0) {
+  if (dot(contact.direction, contact.direction) > 0) {
 
     vec3 p = contact.start;
     vec3 n = contact.direction;
