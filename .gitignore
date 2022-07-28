@@ -10,6 +10,19 @@ CMakeFiles/*
 *.filters
 *.ndjson
 
+*.obj
+*.tlog
+*.user
+*.log
+*.recipe
+*.lastbuildstate
+*.lib
+*.pdb
+*.ilk
+*.exe
+*.dll
+*.sln
+
 build*/
 
 .vs/
