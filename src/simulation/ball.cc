@@ -33,9 +33,29 @@ sphere Ball::hitbox() {
 }
 
 void Ball::step(float dt) {
-  ray contact = Field::collide(hitbox());
+  bool skip_collision = false;
 
-  if (dot(contact.direction, contact.direction) > 0) {
+  // TODO: Add this for other field modes too
+  if (Field::mode == Field::mode_soccar) {
+    constexpr float arena_size_x = 4096;
+    constexpr float arena_size_y = 5120;
+    constexpr float arena_height = 2044;
+
+    constexpr float arena_corner_size = 1652; // bigger than actual corner size by +500 to account for rounding
+    constexpr float curvature_padding = arena_corner_size / 2;
+
+    skip_collision =
+      abs(position[0]) < (arena_size_x - collision_radius - curvature_padding) &&
+      abs(position[1]) < (arena_size_y - collision_radius - arena_corner_size) &&
+      position[2] < (arena_height - collision_radius) &&
+      position[2] > (collision_radius);
+  }
+
+  ray contact;
+  if (!skip_collision)
+    contact = Field::collide(hitbox());
+
+  if (!skip_collision && dot(contact.direction, contact.direction) > 0) {
 
     vec3 p = contact.start;
     vec3 n = contact.direction;
