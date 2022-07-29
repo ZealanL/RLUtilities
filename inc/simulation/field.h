@@ -6,8 +6,7 @@
 #include "simulation/bvh.h"
 #include "simulation/geometry.h"
 
- class Field {
-
+class Field {
   struct wall {
     vec3 p;
     vec3 n;
@@ -15,7 +14,17 @@
   };
 
  public:
-  static std::string mode;
+  enum Mode {
+    mode_none = 0,
+
+    mode_soccar = 1,
+    mode_hoops = 2,
+    mode_dropshot = 3,
+    mode_throwback = 4
+  };
+
+  static std::string modeStr;
+  static Mode mode;
   static bvh<tri> collision_mesh;
   static bvh<sphere> navigation_mesh;
   static std::vector<tri> triangles;

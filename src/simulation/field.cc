@@ -35,7 +35,9 @@ mat3 flip_y = {{1.0f, 0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
 
 bvh<tri> Field::collision_mesh;
 std::vector<tri> Field::triangles;
-std::string Field::mode = std::string("Uninitialized");
+
+Field::Mode Field::mode = Field::mode_none;
+std::string Field::modeStr = std::string("Uninitialized");
 
 mesh quad(vec3 p, vec3 e1, vec3 e2) {
   vec3 vertices[4] = {p + e1 + e2, p - e1 + e2, p - e1 -e2, p + e1 - e2};
@@ -76,7 +78,8 @@ void Field::initialize_soccar() {
   triangles = soccar.to_triangles();
   collision_mesh = bvh<tri>(triangles);
 
-  mode = std::string("soccar");
+  mode = mode_soccar;
+  modeStr = std::string("soccar");
 }
 
 void Field::initialize_hoops() {
@@ -126,7 +129,8 @@ void Field::initialize_hoops() {
   triangles = hoops.to_triangles();
   collision_mesh = bvh<tri>(triangles);
 
-  mode = std::string("hoops");
+  mode = mode_hoops;
+  modeStr = std::string("hoops");
 }
 
 void Field::initialize_dropshot() {
@@ -165,7 +169,8 @@ void Field::initialize_dropshot() {
   triangles = transformed_dropshot.to_triangles();
   collision_mesh = bvh<tri>(triangles);
 
-  mode = std::string("dropshot");
+  mode = mode_dropshot;
+  modeStr = std::string("dropshot");
 }
 
 void Field::initialize_throwback() {
@@ -235,7 +240,8 @@ void Field::initialize_throwback() {
   triangles = throwback.to_triangles();
   collision_mesh = bvh<tri>(triangles);
 
-  mode = std::string("throwback");
+  modeStr = std::string("throwback");
+  mode = mode_throwback;
 }
 
 ray Field::raycast_any(const ray& r) { return collision_mesh.raycast_any(r); }
@@ -262,7 +268,7 @@ ray Field::collide(const aabb& a) {
 
   auto contact_point = ray{vec3{0.0, 0.0, 0.0}, vec3{0.0f, 0.0f, 0.0f}};
 
-  if (mode == std::string("Uninitialized")) {
+  if (mode == mode_none) {
     error_uninitialized_field();
   } else {
     float count = 0.0f;
@@ -296,7 +302,7 @@ ray Field::collide(const aabb& a) {
 ray Field::collide(const sphere& s) {
   auto contact_point = ray{vec3{0.0, 0.0, 0.0}, vec3{0.0f, 0.0f, 0.0f}};
 
-  if (mode == std::string("Uninitialized")) {
+  if (mode == mode_none) {
     error_uninitialized_field();
   } else {
     float count = 0.0f;
